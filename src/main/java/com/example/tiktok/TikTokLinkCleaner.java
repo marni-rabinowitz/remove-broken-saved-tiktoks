@@ -1,4 +1,5 @@
 package com.example.tiktok;
+
 import javafx.application.Application;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.*;
@@ -13,13 +14,16 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.apache.hc.client5.http.fluent.Request;
 import org.apache.hc.core5.util.Timeout;
+import org.apache.hc.core5.http.ClassicHttpResponse;
 
 import java.awt.*;
 import java.io.*;
 import java.net.URI;
 import java.nio.file.*;
-import java.sql.Time;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 public class TikTokLinkCleaner extends Application {
     private final ObservableList<TikTokLink> links = FXCollections.observableArrayList();
@@ -62,11 +66,7 @@ public class TikTokLinkCleaner extends Application {
             @Override
             protected void updateItem(String s, boolean empty) {
                 super.updateItem(s, empty);
-                if (empty) {
-                    setGraphic(null);
-                } else {
-                    setGraphic(openBtn);
-                }
+                setGraphic(empty ? null : openBtn);
             }
         });
 
@@ -105,24 +105,53 @@ public class TikTokLinkCleaner extends Application {
         }
     }
 
-    private void checkLinks() {
-        for (TikTokLink link : links) {
-            new Thread(() -> {
-                try {
-                    int status = Request.get(link.url)
-                            .connectTimeout(Timeout.ofSeconds(5))
-                            .execute()
-                            .returnResponse()
-                            .getCode();
+private void checkLinks() {
+    // Limit how many threads run at once (e.g., 10 at a time)
+    ExecutorService executor = Executors.newFixedThreadPool(10);
 
-                    link.status = (status == 200) ? "✅ Exists" : "❌ Missing (" + status + ")";
-                } catch (Exception e) {
-                    link.status = "❌ Missing/Error";
+    for (TikTokLink link : links) {
+        executor.submit(() -> {
+            try {
+                ClassicHttpResponse response = (ClassicHttpResponse) Request.get(link.url)
+                        .connectTimeout(Timeout.ofSeconds(5))
+                        .execute()
+                        .returnResponse();
+
+                int status = response.getCode();
+                String body = "";
+                if (response.getEntity() != null) {
+                    try (InputStream is = response.getEntity().getContent()) {
+                        body = new String(is.readAllBytes());
+                    }
                 }
 
-                javafx.application.Platform.runLater(() -> table.refresh());
-            }).start();
-        }
+                if (status != 200) {
+                    link.status = "❌ Missing (" + status + ")";
+                }
+                 else {
+                    link.status = "✅ Exists";
+                }
+
+            } catch (Exception e) {
+                link.status = "❌ Missing/Error";
+            }
+
+            javafx.application.Platform.runLater(() -> table.refresh());
+        });
+    }
+
+    executor.shutdown();
+}
+
+    // Helper: looks for common TikTok error messages
+    private boolean containsErrorMessage(String body) {
+        String lower = body.toLowerCase();
+        return lower.contains("video unavailable")
+                || lower.contains("this video is private")
+                || lower.contains("access denied")
+                || lower.contains("couldn't find this")
+                || lower.contains("video currently unavailable")
+                || lower.contains("this video isn't available");
     }
 
     private void saveValidLinks(Stage stage) {
