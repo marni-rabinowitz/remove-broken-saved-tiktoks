@@ -1,17 +1,17 @@
 import webbrowser
 
 # --- CONFIGURATION ---
-BATCH_SIZE = 5
-LINKS_FILE = "tiktok_links.txt"
+BATCH_SIZE = 10
+LINKS_FILE = "tiktoks.txt"
 # ----------------------
 
 def open_links_in_batches(file_path):
-    # Read all links from the file
+    # Read all links from the file (bottom to top)
     with open(file_path, 'r', encoding='utf-8') as f:
-        links = [line.strip() for line in f if line.strip()]
+        links = [line.strip() for line in f if line.strip()][::-1]
 
     total = len(links)
-    print(f"Loaded {total} TikTok links.\n")
+    print(f"Loaded {total} TikTok links (reading from bottom to top).\n")
 
     # Process in batches
     for i in range(0, total, BATCH_SIZE):
