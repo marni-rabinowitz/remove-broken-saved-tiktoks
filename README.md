@@ -77,9 +77,3 @@ Perfect for human review workflows.
 pip install requests
 python filter_tiktoks_oembed.py
 python open_tiktoks.py
-
-
-
-
-**Author:** Marni Rabinowitz
-**Version:** 1.0-SNAPSHOT
