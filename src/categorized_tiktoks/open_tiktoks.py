@@ -2,7 +2,7 @@ import webbrowser
 
 # --- CONFIGURATION ---
 BATCH_SIZE = 10
-LINKS_FILE = "cooking_and_food_formatted.txt"
+LINKS_FILE = "pets_and_animals_formatted.txt"
 # ----------------------
 
 def open_links_in_batches(file_path):
