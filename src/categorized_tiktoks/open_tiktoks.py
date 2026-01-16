@@ -7,8 +7,8 @@ BATCH_SIZE = 10
 LINKS_FILE = "diy_and_crafts_formatted.txt"
 
 # Human-like delay settings (seconds)
-MIN_DELAY = .3
-MAX_DELAY = 1.1
+MIN_DELAY = .1
+MAX_DELAY = .9
 # ----------------------
 
 def open_links_in_batches(file_path):
