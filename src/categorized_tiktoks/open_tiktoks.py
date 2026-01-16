@@ -4,11 +4,11 @@ import random
 
 # --- CONFIGURATION ---
 BATCH_SIZE = 10
-LINKS_FILE = "beauty_and_skincare_formatted.txt"
+LINKS_FILE = "diy_and_crafts_formatted.txt"
 
 # Human-like delay settings (seconds)
-MIN_DELAY = .5
-MAX_DELAY = 1.5
+MIN_DELAY = .3
+MAX_DELAY = 1.1
 # ----------------------
 
 def open_links_in_batches(file_path):
