@@ -4,7 +4,7 @@ import random
 
 # --- CONFIGURATION ---
 BATCH_SIZE = 10
-LINKS_FILE = "parenting_and_family_formatted.txt"
+LINKS_FILE = "home_and_interior_formatted.txt"
 
 # Human-like delay settings (seconds)
 MIN_DELAY = .1
