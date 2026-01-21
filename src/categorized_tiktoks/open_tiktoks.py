@@ -4,7 +4,7 @@ import random
 
 # --- CONFIGURATION ---
 BATCH_SIZE = 10
-LINKS_FILE = "dance_and_performance_formatted.txt"
+LINKS_FILE = "relationships_and_dating_formatted.txt"
 
 # Human-like delay settings (seconds)
 MIN_DELAY = .1
