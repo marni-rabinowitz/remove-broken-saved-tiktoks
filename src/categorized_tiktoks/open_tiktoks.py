@@ -4,7 +4,7 @@ import random
 
 # --- CONFIGURATION ---
 BATCH_SIZE = 10
-LINKS_FILE = "uncategorized_formatted_part_3.txt"
+LINKS_FILE = "uncategorized_formatted_part_5.txt"
 
 # Human-like delay settings (seconds)
 MIN_DELAY = .1
