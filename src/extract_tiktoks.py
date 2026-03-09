@@ -1,6 +1,6 @@
 import re
 
-def extract_tiktok_links(input_file="uncategorized.txt", output_file="uncategorized_formatted.txt"):
+def extract_tiktok_links(input_file="Favorite_Videos.txt", output_file="All_Vids_formatted.txt"):
     # Updated regex to match tiktokv.com as well
     pattern = re.compile(
         r"(https?://(?:www\.)?tiktok[a-z]*\.com/[^\s]+)",
