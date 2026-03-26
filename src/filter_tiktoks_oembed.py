@@ -2,8 +2,8 @@ import requests
 import time
 import re
 
-INPUT_FILE = "tiktoks_dead.txt"
-OUTPUT_FILE = "tiktoks_cleaned.txt"
+INPUT_FILE = "All_Vids_formatted.txt"
+OUTPUT_FILE = "All_Vids_cleaned.txt"
 
 HEADERS = {
     "User-Agent": (

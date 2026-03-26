@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="My Feed">
+<title>My Feed</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html,body { width:100%; height:100%; overflow:hidden; background:#000; font-family:-apple-system,sans-serif; -webkit-tap-highlight-color:transparent; touch-action:none; }
+#feed { width:100%; height:100%; position:relative; overflow:hidden; }
+.slide { position:absolute; width:100%; height:100%; top:0; left:0; display:flex; align-items:center; justify-content:center; background:#000; will-change:transform; }
+.embed-wrap { width:100%; height:100%; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+.embed-wrap iframe { width:100%!important; height:100%!important; border:none; pointer-events:none; }
+.tap-zone { position:absolute; inset:0; z-index:10; cursor:pointer; }
+#dots { position:fixed; right:12px; top:50%; transform:translateY(-50%); display:flex; flex-direction:column; gap:6px; z-index:100; pointer-events:none; }
+.dot { width:4px; border-radius:2px; background:rgba(255,255,255,0.3); transition:all .3s; height:16px; }
+.dot.active { background:#fff; height:28px; }
+#counter { position:fixed; bottom:max(24px,env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); color:rgba(255,255,255,0.4); font-size:12px; letter-spacing:1px; z-index:100; pointer-events:none; font-variant-numeric:tabular-nums; }
+#hint { position:fixed; bottom:max(56px,calc(env(safe-area-inset-bottom) + 32px)); left:50%; transform:translateX(-50%); background:rgba(255,255,255,0.15); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); color:#fff; font-size:13px; padding:8px 18px; border-radius:20px; z-index:100; pointer-events:none; white-space:nowrap; transition:opacity .6s; }
+#hint.hidden { opacity:0; }
+.placeholder { position:absolute; inset:0; background:#0a0a0a; display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,0.15); font-size:13px; z-index:1; transition:opacity .5s; }
+.placeholder.gone { opacity:0; pointer-events:none; }
+</style>
+</head>
+<body>
+<div id="feed"></div>
+<div id="dots"></div>
+<div id="counter"></div>
+<div id="hint">Tap to open in TikTok</div>
+<script>
+const VIDEOS=[
+  {id:"7554136074751151382",url:"https://www.tiktokv.com/share/video/7554136074751151382/"},
+  {id:"7556779287039184159",url:"https://www.tiktokv.com/share/video/7556779287039184159/"},
+  {id:"7557238394846285087",url:"https://www.tiktokv.com/share/video/7557238394846285087/"},
+  {id:"7558656853907934494",url:"https://www.tiktokv.com/share/video/7558656853907934494/"},
+  {id:"7550865291375381778",url:"https://www.tiktokv.com/share/video/7550865291375381778/"},
+  {id:"7560424380384169228",url:"https://www.tiktokv.com/share/video/7560424380384169228/"},
+  {id:"7561177947273465102",url:"https://www.tiktokv.com/share/video/7561177947273465102/"},
+  {id:"7562299188575259917",url:"https://www.tiktokv.com/share/video/7562299188575259917/"},
+  {id:"7565915281667755319",url:"https://www.tiktokv.com/share/video/7565915281667755319/"},
+  {id:"7567774441460059414",url:"https://www.tiktokv.com/share/video/7567774441460059414/"},
+  {id:"7567916640935988510",url:"https://www.tiktokv.com/share/video/7567916640935988510/"},
+  {id:"7568095793685515550",url:"https://www.tiktokv.com/share/video/7568095793685515550/"},
+  {id:"7568207601071148302",url:"https://www.tiktokv.com/share/video/7568207601071148302/"},
+  {id:"7568272032136170766",url:"https://www.tiktokv.com/share/video/7568272032136170766/"},
+];
+
+const feed=document.getElementById('feed'),dotsEl=document.getElementById('dots'),counterEl=document.getElementById('counter'),hintEl=document.getElementById('hint');
+let current=0,slides=[],startY=0,isDragging=false,dragDelta=0;
+
+VIDEOS.forEach((v,i)=>{
+  const slide=document.createElement('div');
+  slide.className='slide';
+  slide.style.transform=`translateY(${i*100}%)`;
+  const placeholder=document.createElement('div');
+  placeholder.className='placeholder';
+  placeholder.textContent='● ● ●';
+  const wrap=document.createElement('div');
+  wrap.className='embed-wrap';
+  const tapZone=document.createElement('div');
+  tapZone.className='tap-zone';
+  tapZone.addEventListener('click',()=>{ window.location.href=`https://www.tiktok.com/video/${v.id}`; });
+  slide.appendChild(placeholder);
+  slide.appendChild(wrap);
+  slide.appendChild(tapZone);
+  feed.appendChild(slide);
+  const dot=document.createElement('div');
+  dot.className='dot'+(i===0?' active':'');
+  dotsEl.appendChild(dot);
+  slides.push({el:slide,wrap,placeholder,loaded:false,v});
+});
+
+function loadSlide(i){
+  if(i<0||i>=slides.length)return;
+  const s=slides[i];
+  if(s.loaded)return;
+  s.loaded=true;
+  const bq=document.createElement('blockquote');
+  bq.className='tiktok-embed';
+  bq.setAttribute('cite',s.v.url);
+  bq.setAttribute('data-video-id',s.v.id);
+  bq.style.cssText='max-width:100%;min-width:100%;margin:0;';
+  s.wrap.appendChild(bq);
+  if(!window._ttLoaded){
+    window._ttLoaded=true;
+    const sc=document.createElement('script');
+    sc.src='https://www.tiktok.com/embed.js';
+    sc.async=true;
+    document.body.appendChild(sc);
+  } else if(window.tiktokEmbed){ window.tiktokEmbed.lib.render(s.wrap); }
+  setTimeout(()=>s.placeholder.classList.add('gone'),2500);
+}
+
+function goTo(index,animate=true){
+  if(index<0||index>=slides.length)return;
+  current=index;
+  slides.forEach((s,i)=>{
+    s.el.style.transition=animate?'transform 0.38s cubic-bezier(0.25,0.46,0.45,0.94)':'none';
+    s.el.style.transform=`translateY(${(i-current)*100}%)`;
+  });
+  dotsEl.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active',i===current));
+  counterEl.textContent=`${current+1} / ${VIDEOS.length}`;
+  loadSlide(current); loadSlide(current+1); loadSlide(current-1);
+}
+
+feed.addEventListener('touchstart',e=>{startY=e.touches[0].clientY;isDragging=true;slides.forEach(s=>s.el.style.transition='none');},{passive:true});
+feed.addEventListener('touchmove',e=>{if(!isDragging)return;dragDelta=e.touches[0].clientY-startY;const pct=(dragDelta/window.innerHeight)*100;slides.forEach((s,i)=>{s.el.style.transform=`translateY(${(i-current)*100+pct}%)`;});},{passive:true});
+feed.addEventListener('touchend',()=>{if(!isDragging)return;isDragging=false;const t=window.innerHeight*0.18;if(dragDelta<-t)goTo(current+1);else if(dragDelta>t)goTo(current-1);else goTo(current);});
+document.addEventListener('keydown',e=>{if(e.key==='ArrowDown')goTo(current+1);if(e.key==='ArrowUp')goTo(current-1);});
+
+setTimeout(()=>hintEl.classList.add('hidden'),3500);
+goTo(0,false);
+</script>
+</body>
+</html>
